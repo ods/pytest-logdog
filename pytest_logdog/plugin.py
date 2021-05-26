@@ -1,11 +1,23 @@
-from contextlib import contextmanager
 import logging
+import re
+from typing import Callable, List, Tuple, Union
 
 import pytest
 
 
+RecordFilterFunc = Callable[[logging.LogRecord], bool]
+
+StringFilter = Union[
+    None,
+    str,
+    Callable[[str], bool],
+]
+
+
 class LogPile:
     __slots__ = ('_records',)
+
+    _records: List[logging.LogRecord]
 
     def __init__(self):
         self._records = []
@@ -15,6 +27,82 @@ class LogPile:
 
     def __iter__(self):
         return iter(self._records)
+
+    # `assert pile.empty()` is more readable than `assert not pile`
+    def empty(self) -> bool:
+        return not self._records
+
+    def _add(self, record):
+        self._records.append(record)
+
+    def _partition(
+        self,
+        func: RecordFilterFunc = None,
+        *,
+        name: StringFilter = None,
+        message: StringFilter = None,
+    ) -> Tuple[List[logging.LogRecord], List[logging.LogRecord]]:
+        filters = []
+        if func is not None:
+            filters.append(func)
+
+        if name is not None:
+
+            def _filter(record):
+                if callable(name):
+                    return name(record.name)
+                else:
+                    # The same behavior as for `logging.Filter(name=...)`
+                    return (
+                        record.name == name
+                        or record.name.startswith(f'{name}.')
+                    )
+
+            filters.append(_filter)
+
+        if message is not None:
+
+            def _filter(record):
+                if callable(message):
+                    return message(record.getMessage())
+                else:
+                    return re.search(message, record.getMessage())
+
+            filters.append(_filter)
+
+        matching = []
+        rest = []
+        for record in self._records:
+            if all(matches(record) for matches in filters):
+                matching.append(record)
+            else:
+                rest.append(record)
+        return matching, rest
+
+    def find(
+        self,
+        func: RecordFilterFunc = None,
+        *,
+        name: StringFilter = None,
+        message: StringFilter = None,
+    ) -> List[logging.LogRecord]:
+        matching, _ = self._partition(func, name=name, message=message)
+        return matching
+
+    def pop(
+        self,
+        func: RecordFilterFunc = None,
+        *,
+        name: StringFilter = None,
+        message: StringFilter = None,
+    ) -> List[logging.LogRecord]:
+        matching, rest = self._partition(func, name=name, message=message)
+
+        # Atomically update without locks
+        count = len(matching) + len(rest)
+        self._records[:count] = rest
+
+        return matching
 
 
 class LogHandler(logging.Handler):
