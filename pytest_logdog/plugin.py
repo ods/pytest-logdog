@@ -1,17 +1,11 @@
 import logging
 import re
-from typing import Callable, List, Tuple, Union
+from typing import Callable, List, Optional, Tuple, Union
 
 import pytest
 
 
-RecordFilterFunc = Callable[[logging.LogRecord], bool]
-
-StringFilter = Union[
-    None,
-    str,
-    Callable[[str], bool],
-]
+RecordFilter = Callable[[logging.LogRecord], bool]
 
 
 class LogPile:
@@ -38,10 +32,10 @@ class LogPile:
 
     def _partition(
         self,
-        func: RecordFilterFunc = None,
+        func: Optional[RecordFilter] = None,
         *,
-        name: StringFilter = None,
-        message: StringFilter = None,
+        name: Optional[str] = None,
+        message: Optional[str] = None,
     ) -> Tuple[List[logging.LogRecord], List[logging.LogRecord]]:
         filters = []
         if func is not None:
@@ -50,24 +44,18 @@ class LogPile:
         if name is not None:
 
             def _filter(record):
-                if callable(name):
-                    return name(record.name)
-                else:
-                    # The same behavior as for `logging.Filter(name=...)`
-                    return (
-                        record.name == name
-                        or record.name.startswith(f'{name}.')
-                    )
+                # The same behavior as for `logging.Filter(name=...)`
+                return (
+                    record.name == name
+                    or record.name.startswith(f'{name}.')
+                )
 
             filters.append(_filter)
 
         if message is not None:
 
             def _filter(record):
-                if callable(message):
-                    return message(record.getMessage())
-                else:
-                    return re.search(message, record.getMessage())
+                return re.search(message, record.getMessage())
 
             filters.append(_filter)
 
@@ -82,10 +70,10 @@ class LogPile:
 
     def find(
         self,
-        func: RecordFilterFunc = None,
+        func: Optional[RecordFilter] = None,
         *,
-        name: StringFilter = None,
-        message: StringFilter = None,
+        name: Optional[str] = None,
+        message: Optional[str] = None,
     ) -> List[logging.LogRecord]:
         """Return list of matching log records."""
         matching, _ = self._partition(func, name=name, message=message)
@@ -93,10 +81,10 @@ class LogPile:
 
     def pop(
         self,
-        func: RecordFilterFunc = None,
+        func: Optional[RecordFilter] = None,
         *,
-        name: StringFilter = None,
-        message: StringFilter = None,
+        name: Optional[str] = None,
+        message: Optional[str] = None,
     ) -> List[logging.LogRecord]:
         """Return list of matching log records and remove them from the pile.
         """
