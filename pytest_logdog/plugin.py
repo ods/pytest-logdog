@@ -30,6 +30,7 @@ class LogPile:
 
     # `assert pile.empty()` is more readable than `assert not pile`
     def empty(self) -> bool:
+        """Return True if the pile is empty, False otherwise."""
         return not self._records
 
     def _add(self, record):
@@ -86,6 +87,7 @@ class LogPile:
         name: StringFilter = None,
         message: StringFilter = None,
     ) -> List[logging.LogRecord]:
+        """Return list of matching log records."""
         matching, _ = self._partition(func, name=name, message=message)
         return matching
 
@@ -96,6 +98,8 @@ class LogPile:
         name: StringFilter = None,
         message: StringFilter = None,
     ) -> List[logging.LogRecord]:
+        """Return list of matching log records and remove them from the pile.
+        """
         matching, rest = self._partition(func, name=name, message=message)
 
         # Atomically update without locks
@@ -148,4 +152,5 @@ class LogDog:
 
 @pytest.fixture
 def logdog():
+    """Scoped log capturing and testing tool."""
     return LogDog
