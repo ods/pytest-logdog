@@ -1,5 +1,7 @@
 import logging
 
+import pytest
+
 
 pytest_plugins = ["pytest_logdog"]
 
@@ -31,3 +33,62 @@ def test_nested(logdog):
         "Inner info",
         "Inner warning",
     ]
+
+
+def test_preset_level(logdog):
+    logger = logging.getLogger("mod")
+    logger.setLevel(logging.WARNING)
+
+    # Precondition: without it the test in the next block doesn't make sense
+    with logdog(level=logging.INFO) as pile:
+        logger.info("Silenced")
+    assert pile.empty()
+
+    with logdog(name="mod", level=logging.INFO) as pile:
+        logger.info("Aloud")
+    assert pile.messages() == ["Aloud"]
+
+
+@pytest.mark.parametrize(
+    "name, matches",
+    [("", False), ("mod", True), ("module", False), ("mod.sub", True)],
+)
+def test_capture_name(logdog, name, matches):
+    with logdog(name="mod") as pile:
+        logging.getLogger(name).error("Message")
+    assert pile.empty() == (not matches)
+
+
+@pytest.mark.parametrize(
+    "name, matches",
+    [("", False), ("mod", True), ("module", False), ("mod.sub", True)],
+)
+def test_filter_drain_name(logdog, name, matches):
+    with logdog() as pile:
+        logging.getLogger(name).error("Message")
+
+    assert pile.filter(name="mod").empty() == (not matches)
+    assert not pile.empty()
+
+    assert pile.drain(name="mod").empty() == (not matches)
+    assert pile.empty() == matches
+
+
+@pytest.mark.parametrize(
+    "pattern, matches",
+    [
+        ("^one", True),
+        ("two", True),
+        ("^two", False),
+        ("one.*three", True),
+    ],
+)
+def test_filter_drain_message(logdog, pattern, matches):
+    with logdog() as pile:
+        logging.error("one two three")
+
+    assert pile.filter(message=pattern).empty() == (not matches)
+    assert not pile.empty()
+
+    assert pile.drain(message=pattern).empty() == (not matches)
+    assert pile.empty() == matches

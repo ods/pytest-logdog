@@ -104,6 +104,7 @@ class LogHandler(logging.Handler):
     __slots__ = ("_pile",)
 
     def __init__(self, pile):
+        super().__init__()
         self._pile = pile
 
     def handle(self, record):
@@ -113,7 +114,11 @@ class LogHandler(logging.Handler):
 class LogDog:
     __slots__ = ("_logger", "_handler", "_orig_level", "_level")
 
-    def __init__(self, name=None, level=None):
+    def __init__(
+        self,
+        name: Optional[str] = None,
+        level: Union[None, int, str] = None,
+    ):
         self._logger = logging.getLogger(name)
         self._level = level
 
