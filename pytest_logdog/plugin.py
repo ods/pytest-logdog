@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Callable, Iterable, List, Optional, Tuple, Union
 
 import pytest
 
@@ -9,12 +9,12 @@ RecordFilter = Callable[[logging.LogRecord], bool]
 
 
 class LogPile:
-    __slots__ = ('_records',)
+    __slots__ = ("_records",)
 
     _records: List[logging.LogRecord]
 
-    def __init__(self):
-        self._records = []
+    def __init__(self, records: Iterable[logging.LogRecord] = ()):
+        self._records = list(records)
 
     def __len__(self):
         return len(self._records)
@@ -29,6 +29,9 @@ class LogPile:
 
     def _add(self, record):
         self._records.append(record)
+
+    def messages(self) -> List[str]:
+        return [record.getMessage() for record in self._records]
 
     def _partition(
         self,
@@ -47,7 +50,7 @@ class LogPile:
                 # The same behavior as for `logging.Filter(name=...)`
                 return (
                     record.name == name
-                    or record.name.startswith(f'{name}.')
+                    or record.name.startswith(f"{name}.")
                 )
 
             filters.append(_filter)
@@ -68,24 +71,24 @@ class LogPile:
                 rest.append(record)
         return matching, rest
 
-    def find(
+    def filter(
         self,
         func: Optional[RecordFilter] = None,
         *,
         name: Optional[str] = None,
         message: Optional[str] = None,
-    ) -> List[logging.LogRecord]:
+    ) -> "LogPile":
         """Return list of matching log records."""
         matching, _ = self._partition(func, name=name, message=message)
-        return matching
+        return LogPile(matching)
 
-    def pop(
+    def drain(
         self,
         func: Optional[RecordFilter] = None,
         *,
         name: Optional[str] = None,
         message: Optional[str] = None,
-    ) -> List[logging.LogRecord]:
+    ) -> "LogPile":
         """Return list of matching log records and remove them from the pile.
         """
         matching, rest = self._partition(func, name=name, message=message)
@@ -94,11 +97,11 @@ class LogPile:
         count = len(matching) + len(rest)
         self._records[:count] = rest
 
-        return matching
+        return LogPile(matching)
 
 
 class LogHandler(logging.Handler):
-    __slots__ = ('_pile',)
+    __slots__ = ("_pile",)
 
     def __init__(self, pile):
         self._pile = pile
@@ -108,7 +111,7 @@ class LogHandler(logging.Handler):
 
 
 class LogDog:
-    __slots__ = ('_logger', '_handler', '_orig_level', '_level')
+    __slots__ = ("_logger", "_handler", "_orig_level", "_level")
 
     def __init__(self, name=None, level=None):
         self._logger = logging.getLogger(name)
