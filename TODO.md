@@ -16,7 +16,7 @@ All items here are subject for discussion.
 
 ### Filters
 
-* [ ] By `level` (None, int, str), greater or equal (or `level_eq` + `level_ge`?).
+* [x] By `level` (None, int, str), greater or equal (or `level_eq` + `level_ge`?).
 * [ ] By `exc_info` (None, bool, class, tuple of classes or tuples).
 * [ ] By `stack_info` (optional bool).
 

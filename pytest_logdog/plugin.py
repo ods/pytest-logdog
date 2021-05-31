@@ -8,6 +8,10 @@ import pytest
 RecordFilter = Callable[[logging.LogRecord], bool]
 
 
+def _get_log_level_no(level: Union[int, str]) -> int:
+    return logging._checkLevel(level)  # type: ignore
+
+
 class LogPile:
     __slots__ = ("_records",)
 
@@ -38,6 +42,7 @@ class LogPile:
         func: Optional[RecordFilter] = None,
         *,
         name: Optional[str] = None,
+        level: Union[None, int, str] = None,
         message: Optional[str] = None,
     ) -> Tuple[List[logging.LogRecord], List[logging.LogRecord]]:
         filters = []
@@ -54,6 +59,15 @@ class LogPile:
                 )
 
             filters.append(_filter)
+
+        if level is not None:
+            levelno = _get_log_level_no(level)
+            if levelno:
+
+                def _filter(record):
+                    return record.levelno >= levelno
+
+                filters.append(_filter)
 
         if message is not None:
 
@@ -76,10 +90,13 @@ class LogPile:
         func: Optional[RecordFilter] = None,
         *,
         name: Optional[str] = None,
+        level: Union[None, int, str] = None,
         message: Optional[str] = None,
     ) -> "LogPile":
         """Return list of matching log records."""
-        matching, _ = self._partition(func, name=name, message=message)
+        matching, _ = self._partition(
+            func, name=name, level=level, message=message
+        )
         return LogPile(matching)
 
     def drain(
@@ -87,11 +104,14 @@ class LogPile:
         func: Optional[RecordFilter] = None,
         *,
         name: Optional[str] = None,
+        level: Union[None, int, str] = None,
         message: Optional[str] = None,
     ) -> "LogPile":
         """Return list of matching log records and remove them from the pile.
         """
-        matching, rest = self._partition(func, name=name, message=message)
+        matching, rest = self._partition(
+            func, name=name, level=level, message=message
+        )
 
         # Atomically update without locks
         count = len(matching) + len(rest)

@@ -75,6 +75,28 @@ def test_filter_drain_name(logdog, name, matches):
 
 
 @pytest.mark.parametrize(
+    "log_level, filter_level, matches",
+    [
+        (logging.DEBUG, logging.INFO, False),
+        (logging.DEBUG, logging.DEBUG, True),
+        (logging.DEBUG, logging.NOTSET, True),
+        (logging.DEBUG, 'DEBUG', True),
+        (logging.DEBUG, 5, True),
+        (logging.DEBUG, 15, False),
+    ],
+)
+def test_filter_drain_level(logdog, log_level, filter_level, matches):
+    with logdog(level=logging.NOTSET) as pile:
+        logging.log(log_level, "Message")
+
+    assert pile.filter(level=filter_level).empty() == (not matches)
+    assert not pile.empty()
+
+    assert pile.drain(level=filter_level).empty() == (not matches)
+    assert pile.empty() == matches
+
+
+@pytest.mark.parametrize(
     "pattern, matches",
     [
         ("^one", True),
