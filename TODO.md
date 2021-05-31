@@ -16,15 +16,15 @@ All items here are subject for discussion.
 
 ### Filters
 
-* [x] By `level` (None, int, str), greater or equal (or `level_eq` + `level_ge`?).
+* [x] By `level` (None, int, str), greater or equal (or `level` + `level_exact`? or `level_ge` + `level_eq`?).
 * [ ] By `exc_info` (None, bool, class, tuple of classes or tuples).
 * [ ] By `stack_info` (optional bool).
 
 ### Other
 
-* [x] Better name for `find()`? `get()` (this looks better without args, but might be mistakenly assumed to return single item)?
-* [ ] `assert_pop_one()` to pop matching and assert only one.  Is it possible to provide custome error message with similar records?   Or full list if it has limitted size.
-* [ ] `assert_pop()`?
+* [x] Better name for `find()`?
+* [ ] `assert_one_pop()` to pop matching and assert only one.  Is it possible to provide custome error message with similar records?   Or full list if it has limitted size.
 * [ ] Return pile from filters instead of list? Provide methods like `get_text()`?
 * [ ] Some way to automate `assert pile.empty()`? In `__exit__`? In `__del__`?
 * [ ] Capture all by default for root (i.e. reset to `NOTSET`)?
+* [ ] Return `LogDog` instance from fixture and provide `__call__` method?  This would simplfy annotation (`def test_smth(logdog: LogDog)` instead of current `def test_smth(logdog: Type[LogDog])`), but it also allow undesirable `with logdog as pile`.  Rename `LogDog` to `LogDocContext` and define `LogDog` with `__call__`?  Export `LogDog` in top-level package to allow `from pytest_logdog import LogDog`?  Or may be enter context and return `Pile` from fixture and provide `__call__` method in it to allow using without `with`?
