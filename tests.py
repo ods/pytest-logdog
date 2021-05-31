@@ -114,3 +114,53 @@ def test_filter_drain_message(logdog, pattern, matches):
 
     assert pile.drain(message=pattern).empty() == (not matches)
     assert pile.empty() == matches
+
+
+@pytest.mark.parametrize(
+    "exc_info, matches",
+    [
+        (None, True),
+        (False, False),
+        (True, True),
+        (ZeroDivisionError, True),
+        (Exception, True),
+        (RuntimeError, False),
+        ((ValueError, ArithmeticError), True),
+        ((ValueError, TypeError), False),
+    ]
+)
+def test_filter_drain_exc_info_exception(logdog, exc_info, matches):
+    with logdog() as pile:
+        try:
+            1 / 0
+        except:
+            logging.exception("Error")
+
+
+    assert pile.filter(exc_info=exc_info).empty() == (not matches)
+    assert not pile.empty()
+
+    assert pile.drain(exc_info=exc_info).empty() == (not matches)
+    assert pile.empty() == matches
+
+
+@pytest.mark.parametrize(
+    "exc_info, matches",
+    [
+        (None, True),
+        (False, True),
+        (True, False),
+        (Exception, False),
+        ((ValueError, TypeError), False),
+    ]
+)
+def test_filter_drain_exc_info_no_exception(logdog, exc_info, matches):
+    with logdog() as pile:
+        logging.error("Error")
+
+
+    assert pile.filter(exc_info=exc_info).empty() == (not matches)
+    assert not pile.empty()
+
+    assert pile.drain(exc_info=exc_info).empty() == (not matches)
+    assert pile.empty() == matches

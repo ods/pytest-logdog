@@ -1,11 +1,12 @@
 import logging
 import re
-from typing import Callable, Iterable, List, Optional, Tuple, Union
+from typing import Callable, Iterable, List, Optional, Tuple, Type, Union
 
 import pytest
 
 
 RecordFilter = Callable[[logging.LogRecord], bool]
+ExceptionType = Union[Type[BaseException], Tuple[Type[BaseException], ...]]
 
 
 def _get_log_level_no(level: Union[int, str]) -> int:
@@ -44,6 +45,7 @@ class LogPile:
         name: Optional[str] = None,
         level: Union[None, int, str] = None,
         message: Optional[str] = None,
+        exc_info: Union[None, bool, ExceptionType] = None,
     ) -> Tuple[List[logging.LogRecord], List[logging.LogRecord]]:
         filters = []
         if func is not None:
@@ -76,6 +78,24 @@ class LogPile:
 
             filters.append(_filter)
 
+        if exc_info is not None:
+            if isinstance(exc_info, (type, tuple)):
+                exc_type = exc_info
+
+                def _filter(record):
+                    return (
+                        record.exc_info is not None
+                        and isinstance(record.exc_info[1], exc_type)
+                    )
+
+            else:
+                has_exc_info = bool(exc_info)
+
+                def _filter(record):
+                    return (record.exc_info is not None) == has_exc_info
+
+            filters.append(_filter)
+
         matching = []
         rest = []
         for record in self._records:
@@ -92,10 +112,11 @@ class LogPile:
         name: Optional[str] = None,
         level: Union[None, int, str] = None,
         message: Optional[str] = None,
+        exc_info: Union[None, bool, ExceptionType] = None,
     ) -> "LogPile":
         """Return list of matching log records."""
         matching, _ = self._partition(
-            func, name=name, level=level, message=message
+            func, name=name, level=level, message=message, exc_info=exc_info
         )
         return LogPile(matching)
 
@@ -106,11 +127,12 @@ class LogPile:
         name: Optional[str] = None,
         level: Union[None, int, str] = None,
         message: Optional[str] = None,
+        exc_info: Union[None, bool, ExceptionType] = None,
     ) -> "LogPile":
         """Return list of matching log records and remove them from the pile.
         """
         matching, rest = self._partition(
-            func, name=name, level=level, message=message
+            func, name=name, level=level, message=message, exc_info=exc_info
         )
 
         # Atomically update without locks
