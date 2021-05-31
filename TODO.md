@@ -7,18 +7,18 @@ All items here are subject for discussion.
 * [x] Interference in nested scopes.
 * [x] Capturing for logger with level set by default.
 * [ ] No race (no records lost) when new records are appended in other thread while being pop-ed.
-* [ ] `filter`/`drain` with each filters and combinations, including:
+* [x] `filter`/`drain` with each filters and combinations, including:
     * [x] `name` is equal and parent, empty string is equivalent to `None`.
     * [x] `message` from start, in the middle etc.
-    * [ ] Different variants of `exc_info`.
+    * [x] Different variants of `exc_info`.
 
 ## Features
 
 ### Filters
 
 * [x] By `level` (None, int, str), greater or equal (or `level` + `level_exact`? or `level_ge` + `level_eq`?).
-* [ ] By `exc_info` (None, bool, class, tuple of classes or tuples).
-* [ ] By `stack_info` (optional bool).
+* [x] By `exc_info` (None, bool, class, tuple of classes or tuples).
+* [x] By `stack_info` (optional bool).
 
 ### Other
 

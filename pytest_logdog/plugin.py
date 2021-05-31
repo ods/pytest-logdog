@@ -46,6 +46,7 @@ class LogPile:
         level: Union[None, int, str] = None,
         message: Optional[str] = None,
         exc_info: Union[None, bool, ExceptionType] = None,
+        stack_info: Optional[bool] = None,
     ) -> Tuple[List[logging.LogRecord], List[logging.LogRecord]]:
         filters = []
         if func is not None:
@@ -96,6 +97,14 @@ class LogPile:
 
             filters.append(_filter)
 
+        if stack_info is not None:
+            has_stack_info = bool(stack_info)
+
+            def _filter(record):
+                return (record.stack_info is not None) == has_stack_info
+
+            filters.append(_filter)
+
         matching = []
         rest = []
         for record in self._records:
@@ -113,10 +122,12 @@ class LogPile:
         level: Union[None, int, str] = None,
         message: Optional[str] = None,
         exc_info: Union[None, bool, ExceptionType] = None,
+        stack_info: Optional[bool] = None,
     ) -> "LogPile":
         """Return list of matching log records."""
         matching, _ = self._partition(
-            func, name=name, level=level, message=message, exc_info=exc_info
+            func, name=name, level=level, message=message, exc_info=exc_info,
+            stack_info=stack_info
         )
         return LogPile(matching)
 
@@ -128,11 +139,13 @@ class LogPile:
         level: Union[None, int, str] = None,
         message: Optional[str] = None,
         exc_info: Union[None, bool, ExceptionType] = None,
+        stack_info: Optional[bool] = None,
     ) -> "LogPile":
         """Return list of matching log records and remove them from the pile.
         """
         matching, rest = self._partition(
-            func, name=name, level=level, message=message, exc_info=exc_info
+            func, name=name, level=level, message=message, exc_info=exc_info,
+            stack_info=stack_info
         )
 
         # Atomically update without locks

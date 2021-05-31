@@ -80,7 +80,7 @@ def test_filter_drain_name(logdog, name, matches):
         (logging.DEBUG, logging.INFO, False),
         (logging.DEBUG, logging.DEBUG, True),
         (logging.DEBUG, logging.NOTSET, True),
-        (logging.DEBUG, 'DEBUG', True),
+        (logging.DEBUG, "DEBUG", True),
         (logging.DEBUG, 5, True),
         (logging.DEBUG, 15, False),
     ],
@@ -122,12 +122,15 @@ def test_filter_drain_message(logdog, pattern, matches):
         (None, True),
         (False, False),
         (True, True),
+        (0, False),
+        (1, True),
+        (object(), True),
         (ZeroDivisionError, True),
         (Exception, True),
         (RuntimeError, False),
         ((ValueError, ArithmeticError), True),
         ((ValueError, TypeError), False),
-    ]
+    ],
 )
 def test_filter_drain_exc_info_exception(logdog, exc_info, matches):
     with logdog() as pile:
@@ -135,7 +138,6 @@ def test_filter_drain_exc_info_exception(logdog, exc_info, matches):
             1 / 0
         except:
             logging.exception("Error")
-
 
     assert pile.filter(exc_info=exc_info).empty() == (not matches)
     assert not pile.empty()
@@ -150,17 +152,52 @@ def test_filter_drain_exc_info_exception(logdog, exc_info, matches):
         (None, True),
         (False, True),
         (True, False),
+        (0, True),
+        (1, False),
+        (object(), False),
         (Exception, False),
         ((ValueError, TypeError), False),
-    ]
+    ],
 )
 def test_filter_drain_exc_info_no_exception(logdog, exc_info, matches):
     with logdog() as pile:
         logging.error("Error")
 
-
     assert pile.filter(exc_info=exc_info).empty() == (not matches)
     assert not pile.empty()
 
     assert pile.drain(exc_info=exc_info).empty() == (not matches)
+    assert pile.empty() == matches
+
+
+@pytest.mark.parametrize(
+    "log_stack_info, filter_stack_info, matches",
+    [
+        (None, None, True),
+        (False, None, True),
+        (True, None, True),
+        (None, False, True),
+        (None, True, False),
+        (False, False, True),
+        (False, 0, True),
+        (False, True, False),
+        (False, 1, False),
+        (False, object(), False),
+        (True, False, False),
+        (True, 0, False),
+        (True, True, True),
+        (True, 1, True),
+        (True, object(), True),
+    ],
+)
+def test_filter_drain_stack_info(
+    logdog, log_stack_info, filter_stack_info, matches
+):
+    with logdog() as pile:
+        logging.error("Error", stack_info=log_stack_info)
+
+    assert pile.filter(stack_info=filter_stack_info).empty() == (not matches)
+    assert not pile.empty()
+
+    assert pile.drain(stack_info=filter_stack_info).empty() == (not matches)
     assert pile.empty() == matches
