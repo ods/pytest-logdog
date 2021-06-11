@@ -4,27 +4,18 @@ All items here are subject for discussion.
 
 ## Tests
 
-* [x] Interference in nested scopes.
-* [x] Capturing for logger with level set by default.
 * [ ] No race (no records lost) when new records are appended in other thread while being pop-ed.
-* [x] `filter`/`drain` with each filters and combinations, including:
-    * [x] `name` is equal and parent, empty string is equivalent to `None`.
-    * [x] `message` from start, in the middle etc.
-    * [x] Different variants of `exc_info`.
 
 ## Features
 
 ### Filters
 
-* [x] By `level` (None, int, str), greater or equal (or `level` + `level_exact`? or `level_ge` + `level_eq`?).
-* [x] By `exc_info` (None, bool, class, tuple of classes or tuples).
-* [x] By `stack_info` (optional bool).
+* [ ] A way to filter by exact value of `level`? `level` + `level_exact`? or `level_ge` + `level_eq`?.
 
 ### Other
 
-* [x] Better name for `find()`?
 * [ ] `assert_one_pop()` to pop matching and assert only one.  Is it possible to provide custome error message with similar records?   Or full list if it has limitted size.
-* [ ] Return pile from filters instead of list? Provide methods like `get_text()`?
-* [ ] Some way to automate `assert pile.empty()`? In `__exit__`? In `__del__`?
-* [ ] Capture all by default for root (i.e. reset to `NOTSET`)?
+* [ ] Add methods like `get_text()` to `LogPile` (note, it's also returned from `filter` and `drain`)?
+* [ ] Some way to automate `assert pile.is_empty()`? In `__exit__`?
+* [ ] Capture all by default for root (i.e. reset to `NOTSET`)? If so, the fixture itself should have pile interface.
 * [ ] Return `LogDog` instance from fixture and provide `__call__` method?  This would simplfy annotation (`def test_smth(logdog: LogDog)` instead of current `def test_smth(logdog: Type[LogDog])`), but it also allow undesirable `with logdog as pile`.  Rename `LogDog` to `LogDocContext` and define `LogDog` with `__call__`?  Export `LogDog` in top-level package to allow `from pytest_logdog import LogDog`?  Or may be enter context and return `Pile` from fixture and provide `__call__` method in it to allow using without `with`?
