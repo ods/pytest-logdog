@@ -152,6 +152,9 @@ class LogPile:
         count = len(matching) + len(rest)
         self._records[:count] = rest
 
+        # Commented buggy version to ensure test catches the race:
+        # self._records = rest
+
         return LogPile(matching)
 
 

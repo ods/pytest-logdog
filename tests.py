@@ -1,4 +1,7 @@
+from concurrent.futures import ThreadPoolExecutor
 import logging
+from random import random
+from time import sleep
 
 import pytest
 
@@ -12,6 +15,23 @@ def test_it_works(logdog):
     assert len(pile) == 1
     [rec] = pile
     assert rec.getMessage() == "Test"
+
+
+def test_log_drain_race(logdog):
+    COUNT = 100
+
+    def log():
+        for _ in range(COUNT):
+            sleep(random() * 0.000_001)
+            logging.info("Test")
+
+    drained = []
+    with ThreadPoolExecutor() as executor, logdog(level=logging.INFO) as pile:
+        future = executor.submit(log)
+        while not future.done():
+            drained.extend(pile.drain())
+    drained.extend(pile.drain())
+    assert len(drained) == COUNT
 
 
 def test_nested(logdog):

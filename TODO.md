@@ -2,10 +2,6 @@
 
 All items here are subject for discussion.
 
-## Tests
-
-* [ ] No race (no records lost) when new records are appended in other thread while being pop-ed.
-
 ## Features
 
 ### Filters
