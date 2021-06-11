@@ -27,8 +27,8 @@ class LogPile:
     def __iter__(self):
         return iter(self._records)
 
-    # `assert pile.empty()` is more readable than `assert not pile`
-    def empty(self) -> bool:
+    # `assert pile.is_empty()` is more readable than `assert not pile`
+    def is_empty(self) -> bool:
         """Return True if the pile is empty, False otherwise."""
         return not self._records
 

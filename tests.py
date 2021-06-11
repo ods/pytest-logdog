@@ -42,7 +42,7 @@ def test_preset_level(logdog):
     # Precondition: without it the test in the next block doesn't make sense
     with logdog(level=logging.INFO) as pile:
         logger.info("Silenced")
-    assert pile.empty()
+    assert pile.is_empty()
 
     with logdog(name="mod", level=logging.INFO) as pile:
         logger.info("Aloud")
@@ -56,7 +56,7 @@ def test_preset_level(logdog):
 def test_capture_name(logdog, name, matches):
     with logdog(name="mod") as pile:
         logging.getLogger(name).error("Message")
-    assert pile.empty() == (not matches)
+    assert pile.is_empty() == (not matches)
 
 
 @pytest.mark.parametrize(
@@ -67,11 +67,11 @@ def test_filter_drain_name(logdog, name, matches):
     with logdog() as pile:
         logging.getLogger(name).error("Message")
 
-    assert pile.filter(name="mod").empty() == (not matches)
-    assert not pile.empty()
+    assert pile.filter(name="mod").is_empty() == (not matches)
+    assert not pile.is_empty()
 
-    assert pile.drain(name="mod").empty() == (not matches)
-    assert pile.empty() == matches
+    assert pile.drain(name="mod").is_empty() == (not matches)
+    assert pile.is_empty() == matches
 
 
 @pytest.mark.parametrize(
@@ -89,11 +89,11 @@ def test_filter_drain_level(logdog, log_level, filter_level, matches):
     with logdog(level=logging.NOTSET) as pile:
         logging.log(log_level, "Message")
 
-    assert pile.filter(level=filter_level).empty() == (not matches)
-    assert not pile.empty()
+    assert pile.filter(level=filter_level).is_empty() == (not matches)
+    assert not pile.is_empty()
 
-    assert pile.drain(level=filter_level).empty() == (not matches)
-    assert pile.empty() == matches
+    assert pile.drain(level=filter_level).is_empty() == (not matches)
+    assert pile.is_empty() == matches
 
 
 @pytest.mark.parametrize(
@@ -109,11 +109,11 @@ def test_filter_drain_message(logdog, pattern, matches):
     with logdog() as pile:
         logging.error("one two three")
 
-    assert pile.filter(message=pattern).empty() == (not matches)
-    assert not pile.empty()
+    assert pile.filter(message=pattern).is_empty() == (not matches)
+    assert not pile.is_empty()
 
-    assert pile.drain(message=pattern).empty() == (not matches)
-    assert pile.empty() == matches
+    assert pile.drain(message=pattern).is_empty() == (not matches)
+    assert pile.is_empty() == matches
 
 
 @pytest.mark.parametrize(
@@ -139,11 +139,11 @@ def test_filter_drain_exc_info_exception(logdog, exc_info, matches):
         except:
             logging.exception("Error")
 
-    assert pile.filter(exc_info=exc_info).empty() == (not matches)
-    assert not pile.empty()
+    assert pile.filter(exc_info=exc_info).is_empty() == (not matches)
+    assert not pile.is_empty()
 
-    assert pile.drain(exc_info=exc_info).empty() == (not matches)
-    assert pile.empty() == matches
+    assert pile.drain(exc_info=exc_info).is_empty() == (not matches)
+    assert pile.is_empty() == matches
 
 
 @pytest.mark.parametrize(
@@ -163,11 +163,11 @@ def test_filter_drain_exc_info_no_exception(logdog, exc_info, matches):
     with logdog() as pile:
         logging.error("Error")
 
-    assert pile.filter(exc_info=exc_info).empty() == (not matches)
-    assert not pile.empty()
+    assert pile.filter(exc_info=exc_info).is_empty() == (not matches)
+    assert not pile.is_empty()
 
-    assert pile.drain(exc_info=exc_info).empty() == (not matches)
-    assert pile.empty() == matches
+    assert pile.drain(exc_info=exc_info).is_empty() == (not matches)
+    assert pile.is_empty() == matches
 
 
 @pytest.mark.parametrize(
@@ -196,8 +196,8 @@ def test_filter_drain_stack_info(
     with logdog() as pile:
         logging.error("Error", stack_info=log_stack_info)
 
-    assert pile.filter(stack_info=filter_stack_info).empty() == (not matches)
-    assert not pile.empty()
+    assert pile.filter(stack_info=filter_stack_info).is_empty() == (not matches)
+    assert not pile.is_empty()
 
-    assert pile.drain(stack_info=filter_stack_info).empty() == (not matches)
-    assert pile.empty() == matches
+    assert pile.drain(stack_info=filter_stack_info).is_empty() == (not matches)
+    assert pile.is_empty() == matches
